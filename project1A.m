@@ -22,13 +22,13 @@ y = awgn(y,20,'measured');
 y = y(N_cp+1:end);
 
 % transform back
-r = fft(y(1:N));
+r = fft(y,N);
 
 % compute channel gain
 H = fft(h, N);
 
 % multiply received message with channel gain
-s = conj(H).*r(1:N);
+s = conj(H).*r;
 
 %estimate channel
 
