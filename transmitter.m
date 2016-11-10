@@ -1,4 +1,4 @@
-function [ z ] = transmitter( bits,N_cp )
+function [ z,symbol ] = transmitter( bits,N_cp )
 %TRANSMITTER Summary of this function goes here
 %   Detailed explanation goes here
 symbol = bits2sym(bits); %corresponds to s[n]
