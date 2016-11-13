@@ -8,15 +8,24 @@ N_cp = 100;
 
 % choice of channel
 h = h_1;
+%PN code as pilot:
+L_PN = 128;
+PN_init_cond = [0 1 0 1 0 0 0 1];
+PN_Polynomial = [8 2 0];
+pn = pn_gen(256,PN_init_cond,PN_Polynomial);
 %% Generate symbols
-b = 2*randi(2,1,N_bits)-3;
+bits = randsrc(1,N_bits,[0 1]);
+%the previous function is actually generating -1 and 1, they are not bits.
+symbol = bits2sym(bits);
+% Generate symbols for PN sequence
+pn_symbol = bits2sym(pn);
 %% Generate OFDM symbol
-z = transmitter(b,N,N_cp);
+%make the process of generating OFDM symbol clear 
+z = OFDM_gen(symbol,N,N_cp);
+pn_ofdm = OFDM_gen(pn_symbol,N,N_cp);
 %% Transmit OFDM symbol
-% Send through channel
-y = conv(h,z);
-% Add noise
-y = awgn(y,20,'measured');
+y = channel(z,h,20);
+pn_y = channel(pn_ofdm,h,20);
 %% OFDM decoding
 % discard cyclic prefix
 y = y(N_cp+1:end);
@@ -28,12 +37,24 @@ r = fft(y,N);
 H = fft(h, N);
 
 % multiply received message with channel gain
-s = conj(H).*r;
+s = conj(H_hat).*r;
 
 %estimate channel
-
-
-
+H_hat = fft(pn_y(N_cp+1:end),N)./pn_symbol;
+%compare real and estimated channel
+figure
+plot(real(H))
+hold on
+plot(real(H_hat))
+legend('real(H)','real(H_hat)')
+figure
+plot(imag(H))
+hold on
+plot(imag(H_hat))
+legend('imag(H)','imag(H_hat)')
+%equalization (assume channel unknow)
+s_channel_unknown = r./H_hat;
 %decode symbols
-b2 = [sign(real(s)); sign(imag(s))];
-b2 = b2(:)';
+bits_ = sym2bits(s_channel_unknown);
+diff_bits = sum(bits - bits_);%difference in bits
+disp(diff_bits)
