@@ -4,10 +4,10 @@ h_2 = [0.5 zeros(1,7) 0.5];
 
 N = 128;
 N_bits = 2*N;
-N_cp = 100;
+N_cp = 16;
 
 % choice of channel
-h = h_1;
+h = h_2;
 %PN code as pilot:
 L_PN = 128;
 PN_init_cond = [0 1 0 1 0 0 0 1];
@@ -41,17 +41,6 @@ s = conj(H_hat).*r;
 
 %estimate channel
 H_hat = fft(pn_y(N_cp+1:end),N)./pn_symbol;
-%compare real and estimated channel
-figure
-plot(real(H))
-hold on
-plot(real(H_hat))
-legend('real(H)','real(H_hat)')
-figure
-plot(imag(H))
-hold on
-plot(imag(H_hat))
-legend('imag(H)','imag(H_hat)')
 %equalization (assume channel unknow)
 s_channel_unknown = r./H_hat;
 %decode symbols
