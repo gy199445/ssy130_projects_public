@@ -22,9 +22,10 @@ pn_symbol = bits2sym(pn);
 %make the process of generating OFDM symbol clear 
 z = OFDM_gen(symbol,N,N_cp);
 pn_ofdm = OFDM_gen(pn_symbol,N,N_cp);
+pn_z = [pn_ofdm z]; %pack the training symbol to message
 %% Transmit OFDM symbol
-y = channel(z,h,20);
-pn_y = channel(pn_ofdm,h,SNR);
+y = channel(z,h,20);%known channel
+pn_y = channel(pn_z,h,SNR);%unknown channel
 %% OFDM decoding (channel known)
 % discard cyclic prefix
 y = y(N_cp+1:end);
@@ -43,4 +44,7 @@ bits_ = sym2bits(s);
 diff_bits = sum(abs(bits - bits_));%difference in bits
 disp(diff_bits)
 %% OFDM decoding (channel unknown)
-z_pn = [z pn_ofdm]; %pack the training symbol to message
+[H_, symbol_] = OFDM_equalization(pn_y,pn_symbol,N,N_cp);
+bits_ch_unknown = sym2bits(symbol_);
+diff_bits_ch_unknown = sum(abs(bits - bits_ch_unknown));%difference in bits
+disp(diff_bits_ch_unknown)
