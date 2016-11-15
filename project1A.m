@@ -14,9 +14,9 @@ PN_Polynomial = [8 2 0];
 pn = pn_gen(L_PN,PN_init_cond,PN_Polynomial);
 % Generate symbols for PN sequence
 pn_symbol = bits2sym(pn);
-delay = 0;
+delay = 1;
 %number of iterations
-N_it = 2;
+N_it = 1;
 %bit error counters for each iterations
 bits_err_known_ch = zeros(1,N_it);
 bits_err_unknow_ch = zeros(1,N_it);
@@ -35,7 +35,7 @@ for i=1:N_it
     pn_y = channel(pn_z,h,sigma,delay);%unknown channel
     %% OFDM decoding (channel known)
     % discard cyclic prefix
-    y = y(N_cp+1:end);
+    y = y(N_cp+1:N_cp+128);
     
     % transform back
     r = fft(y,N);
@@ -50,7 +50,12 @@ for i=1:N_it
     bits_ = sym2bits(s);
     bits_err_known_ch(i) = sum(abs(bits - bits_));%difference in bits
     %% OFDM decoding (channel unknown)
-    [~, symbol_] = OFDM_equalization(pn_y,pn_symbol,N,N_cp);
+    [H_, symbol_] = OFDM_equalization(pn_y,pn_symbol,N,N_cp);
     bits_ch_unknown = sym2bits(symbol_);
     bits_err_unknow_ch(i) = sum(abs(bits - bits_ch_unknown));%difference in bits
 end
+N_total_bits = N_it*N_bits;
+total_error_unknown_ch = sum(bits_err_known_ch);
+total_error_known_ch = sum(bits_err_known_ch);
+fprintf('%d bits transmitted, %d error in total, BER %.4f (channel known)',N_total_bits,total_error_known_ch,total_error_known_ch/N_total_bits);
+fprintf('\n%d bits transmitted, %d error in total, BER %.4f (channel unknown)',N_total_bits,total_error_unknown_ch,total_error_unknown_ch/N_total_bits);

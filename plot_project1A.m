@@ -1,3 +1,4 @@
+close all
 %% compare the estimated channel with the true one
 figure
 plot(real(H),'.-')
