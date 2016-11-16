@@ -3,10 +3,14 @@ h_1 = 0.8.^(0:59);
 h_2 = [0.5 zeros(1,7) 0.5];
 N = 128;
 N_bits = 2*N;
-N_cp = 64;
+
 sigma = 0.01;%noise level
 % choice of channel
 h = h_1;
+
+% length of cyclic prefix, dependent on channel (20% safety margin)
+N_cp = floor(1.2*length(h));
+
 %PN code as pilot:
 L_PN = 256;
 PN_init_cond = [0 1 0 1 0 0 0 1];
