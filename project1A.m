@@ -18,16 +18,22 @@ pn = pn_gen(L_PN,PN_init_cond,PN_Polynomial);
 % Generate symbols for PN sequence
 pn_symbol = bits2sym(pn);
 
+%carrier to estimate bit error for
+carrier = 33;
+idxs_from_carrier = [(carrier*2 - 1) carrier*2];
+
 %number of iterations
-N_it = 100;
+N_it = 1000;
 %bit error counters for each iterations
 bits_err_known_ch = zeros(1,N_it);
 bits_err_unknow_ch = zeros(1,N_it);
+bits_err_known_carrier = zeros(1,N_it);
+bits_err_unknown_carrier = zeros(1,N_it);
 % loop through delays
 delays = [0];
 for delay = delays
     % loop through noise levels
-    sigmas = [0.05];%noise level
+    sigmas = [0.1];%noise level
     for sigma = sigmas
         for i=1:N_it
             %% Generate symbols
@@ -59,16 +65,26 @@ for delay = delays
             %decode symbols
             bits_ = sym2bits(s);
             bits_err_known_ch(i) = sum(abs(bits - bits_));%difference in bits
+            bits_err_known_carrier(i) =...
+                sum(abs(bits(idxs_from_carrier) - bits_(idxs_from_carrier)));
             %% OFDM decoding (channel unknown)
             [H_, symbol_] = OFDM_equalization(pn_y,pn_symbol,N,N_cp);
             bits_ch_unknown = sym2bits(symbol_);
             bits_err_unknow_ch(i) = sum(abs(bits - bits_ch_unknown));%difference in bits
+            bits_err_unknown_carrier(i) =...
+                sum(abs(bits(idxs_from_carrier) - bits_ch_unknown(idxs_from_carrier)));
         end
         N_total_bits = N_it*N_bits;
         total_error_unknown_ch = sum(bits_err_unknow_ch);
         total_error_known_ch = sum(bits_err_known_ch);
+        total_error_known_carrier = sum(bits_err_known_carrier);
+        total_error_unknown_carrier = sum(bits_err_unknown_carrier);
+        
         fprintf('\ndelay %d, noise level %.2f', delay, sigma);
         fprintf('\n%d bits transmitted, %d error in total, BER %.4f (channel known)',N_total_bits,total_error_known_ch,total_error_known_ch/N_total_bits);
-        fprintf('\n%d bits transmitted, %d error in total, BER %.4f (channel unknown)\n',N_total_bits,total_error_unknown_ch,total_error_unknown_ch/N_total_bits);
+        fprintf('\n%d bits transmitted, %d error in total, BER %.4f (channel unknown)',N_total_bits,total_error_unknown_ch,total_error_unknown_ch/N_total_bits);
+        fprintf('\nCarrier %d: BER %.4f (channel known)', carrier, total_error_known_carrier/(N_it*2));
+        fprintf('\nCarrier %d: BER %.4f (channel unknown)\n', carrier, total_error_unknown_carrier/(N_it*2));
+        disp(['Estimated error rate for carrier: ' num2str(1 - 0.5*(1 + erf(abs(H(carrier))/(sqrt(2)*sqrt(N)*sigma))))]);
     end
 end
