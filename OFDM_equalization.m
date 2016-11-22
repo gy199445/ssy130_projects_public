@@ -10,12 +10,12 @@ function [ H_hat, symbol ] = OFDM_equalization( y,pn_symbol,N,N_cp )
 %   H: estimated channel
 %   symbol: equalized data symbol
 %Training symbol
-y_train = y(N_cp+1:N_cp+128);
+y_train = y(N_cp+1:N_cp+N);
 %Data symbol  
-y_data = y((N_cp+128)+N_cp+1:(N_cp+128)+N_cp+128);
+y_data = y((N_cp+N)+N_cp+1:(N_cp+N)+N_cp+N);
 %estimate channel
-H_hat = fft(y_train,N)./(pn_symbol+eps);% avoid dividing zero
+H_hat = fft(y_train,N)./(pn_symbol.');% avoid dividing zero
 %equalization (zero forcing)
-symbol = fft(y_data)./H_hat;
+symbol = conj(H_hat).*fft(y_data);
 end
 
