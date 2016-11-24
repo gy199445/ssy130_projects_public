@@ -1,6 +1,14 @@
 %% load data
-load('z.mat')
+%bits -> information bits (128)
+%symbol -> information symbol (64)
+%z_data -> ofdm info symbol
+%pn_ofdm -> training pn ofdm symbol
+%pn_symbol -> training pn symbol
 %z is a OFDM symbol with 256 info bits and N_cp = 72
+%noise level
+sigma = 0;
+load('transmitting.mat')
+N_cp = 32;
 %% Up-sampling
 % z is the original baseband signal
 N = length(z);
@@ -43,9 +51,9 @@ fs = 16000;
 fcm = 4000;
 F = (0:NN-1)/NN*fs;
 n = (0:length(zi)-1)';
-yrec = zmr; % The received real valued signal
+yrec = simulate_audio_channel(zmr,sigma); % The received real valued signal
 yib = yrec.*exp(-1i*2*pi*fcm/fs*n);
-semilogy(F,abs([fft(y,NN) fft(yib,NN)])) % Check transforms
+semilogy(F,abs([fft(yrec,NN) fft(yib,NN)])) % Check transforms
 legend('Modulated','Demodulated')
 xlabel('Frequency (Hz)');
 yi = conv(yib,B);
