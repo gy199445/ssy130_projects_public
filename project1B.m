@@ -9,6 +9,9 @@
 sigma = 0;
 load('transmitting.mat')
 N_cp = 32;
+threshold = 0.5;
+N_it = 1;
+N_bits = 128;
 %% Up-sampling
 % z is the original baseband signal
 N = length(z);
@@ -52,7 +55,10 @@ fcm = 4000;
 F = (0:NN-1)/NN*fs;
 n = (0:length(zi)-1)';
 yrec = simulate_audio_channel(zmr,sigma); % The received real valued signal
-yib = yrec.*exp(-1i*2*pi*fcm/fs*n);
+%truncate the received signal by energy detection
+offset = energy_detection(yrec,threshold);
+yrec = yrec(offset+1:end);
+yib = yrec.*exp(-1i*2*pi*fcm/fs*(0:length(yrec)-1)');
 semilogy(F,abs([fft(yrec,NN) fft(yib,NN)])) % Check transforms
 legend('Modulated','Demodulated')
 xlabel('Frequency (Hz)');
@@ -68,3 +74,11 @@ y = yi(1:D:end);
 semilogy(f,abs(fft(y,NN))) % Check transforms
 %% Check in time domain
 plot(real(y))
+%% channel estimation and equalization
+[H_, symbol_] = OFDM_equalization(y,pn_symbol,64,N_cp);
+bits_ch_unknown = sym2bits(symbol_);
+%print results
+bits_err_unknown_ch = sum(abs(bits-bits_ch_unknown));
+N_total_bits = N_it*N_bits;
+total_error_unknown_ch = sum(bits_err_unknown_ch);
+fprintf('%d bits transmitted, %d error in total, BER %.4f (channel unknown)',N_total_bits,total_error_unknown_ch,total_error_unknown_ch/N_total_bits);
