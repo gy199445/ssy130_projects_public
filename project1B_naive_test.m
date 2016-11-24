@@ -17,6 +17,7 @@ pn_symbol = bits2sym(pn);
 bits = randsrc(1,N_bits,[0 1]);
 %the previous function is actually generating -1 and 1, they are not bits.
 symbol = bits2sym(bits);
+bits = (bits == 1);
 %% Generate OFDM symbol
 %make the process of generating OFDM symbol clear
 z_data = OFDM_gen(symbol,N,N_cp);
