@@ -4,7 +4,7 @@
 %z_data -> ofdm info symbol
 %pn_ofdm -> training pn ofdm symbol
 %pn_symbol -> training pn symbol
-%z is a OFDM symbol with 256 info bits and N_cp = 72
+%z = [pn_ofdm z_data]
 %noise level
 sigma = 0;
 load('transmitting.mat')
